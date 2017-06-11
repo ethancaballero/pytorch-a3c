@@ -31,15 +31,6 @@ def weights_init(m):
         m.weight.data.uniform_(-w_bound, w_bound)
         m.bias.data.fill_(0)
 
-#https://github.com/pytorch/pytorch/issues/1768
-class SELU(nn.ELU):
-    def __init__(self):
-        super(SELU, self).__init__()
-        self.alpha = 1.6732632423543772848170429916717
-        self.scale = 1.0507009873554804934193349852946
-
-    def forward(self, input):
-        return self.scale * F.elu(input, self.alpha, self.inplace)
 
 class ActorCritic(torch.nn.Module):
 
@@ -48,8 +39,7 @@ class ActorCritic(torch.nn.Module):
         self.conv1 = nn.Conv2d(num_inputs, 32, 3, stride=2, padding=1)
         self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
-        self.conv4 = nn.Conv2d(32, 32, 3, stride=2, padding=1)        
-        self.selu = SELU()
+        self.conv4 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
 
         self.lstm = nn.LSTMCell(32 * 3 * 3, 256)
 
@@ -72,10 +62,10 @@ class ActorCritic(torch.nn.Module):
 
     def forward(self, inputs):
         inputs, (hx, cx) = inputs
-        x = self.selu(self.conv1(inputs))
-        x = self.selu(self.conv2(x))
-        x = self.selu(self.conv3(x))
-        x = self.selu(self.conv4(x))
+        x = F.selu(self.conv1(inputs))
+        x = F.selu(self.conv2(x))
+        x = F.selu(self.conv3(x))
+        x = F.selu(self.conv4(x))
 
         x = x.view(-1, 32 * 3 * 3)
         hx, cx = self.lstm(x, (hx, cx))
